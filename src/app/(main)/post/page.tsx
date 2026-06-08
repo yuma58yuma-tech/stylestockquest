@@ -69,7 +69,7 @@ export default function PostPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <h1 className="text-xl font-bold text-white">コーデを投稿</h1>
+      <h1 className="text-xl font-bold text-zinc-900">コーデを投稿</h1>
 
       {/* Image upload */}
       <div>
@@ -86,7 +86,7 @@ export default function PostPage() {
         ) : (
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-500 transition-colors"
+            className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-zinc-300 text-zinc-400 hover:border-zinc-400 transition-colors bg-white"
           >
             <Camera size={40} strokeWidth={1.5} />
             <span className="text-sm">タップして画像を選択</span>
@@ -97,47 +97,47 @@ export default function PostPage() {
 
       {/* Title */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-zinc-400">タイトル</label>
+        <label className="text-xs font-medium text-zinc-500">タイトル</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="コーデのタイトルを入力"
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+          className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
         />
       </div>
 
       {/* Description */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-zinc-400">説明文</label>
+        <label className="text-xs font-medium text-zinc-500">説明文</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="コーデについて説明してください"
           rows={3}
-          className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+          className="w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
         />
       </div>
 
       {/* Hashtags */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-zinc-400">ハッシュタグ（スペース区切り）</label>
+        <label className="text-xs font-medium text-zinc-500">ハッシュタグ（スペース区切り）</label>
         <input
           type="text"
           value={hashtags}
           onChange={(e) => setHashtags(e.target.value)}
           placeholder="minimal street vintage"
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+          className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
         />
       </div>
 
       {/* Items */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-300">着用アイテム</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">着用アイテム</h2>
           <button
             onClick={() => setItems((p) => [...p, emptyItem()])}
-            className="flex items-center gap-1 text-xs text-[#F5A623]"
+            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 transition-colors"
           >
             <Plus size={14} />
             追加
@@ -145,11 +145,11 @@ export default function PostPage() {
         </div>
 
         {items.map((item, idx) => (
-          <div key={idx} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3">
+          <div key={idx} className="rounded-xl border border-zinc-200 bg-white p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-zinc-500">アイテム {idx + 1}</span>
+              <span className="text-xs font-medium text-zinc-400">アイテム {idx + 1}</span>
               {items.length > 1 && (
-                <button onClick={() => removeItem(idx)} className="text-zinc-600 hover:text-zinc-400">
+                <button onClick={() => removeItem(idx)} className="text-zinc-400 hover:text-zinc-700">
                   <X size={14} />
                 </button>
               )}
@@ -161,14 +161,14 @@ export default function PostPage() {
                 value={item.brand}
                 onChange={(e) => updateItem(idx, { brand: e.target.value })}
                 placeholder="ブランド"
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
               />
               <input
                 type="text"
                 value={item.name}
                 onChange={(e) => updateItem(idx, { name: e.target.value })}
                 placeholder="アイテム名"
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
               />
             </div>
 
@@ -177,27 +177,27 @@ export default function PostPage() {
                 <select
                   value={item.category}
                   onChange={(e) => updateItem(idx, { category: e.target.value as ItemCategory })}
-                  className="w-full appearance-none rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-[#F5A623] focus:outline-none"
+                  className="w-full appearance-none rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
-                <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400" />
               </div>
               <input
                 type="text"
                 value={item.size}
                 onChange={(e) => updateItem(idx, { size: e.target.value })}
                 placeholder="サイズ"
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
               />
               <input
                 type="text"
                 value={item.color}
                 onChange={(e) => updateItem(idx, { color: e.target.value })}
                 placeholder="カラー"
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function PostPage() {
                   onClick={() => updateItem(idx, { forSale: !item.forSale })}
                   className={cn(
                     'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
-                    item.forSale ? 'bg-[#F5A623]' : 'bg-zinc-700'
+                    item.forSale ? 'bg-zinc-900' : 'bg-zinc-300'
                   )}
                 >
                   <span
@@ -221,7 +221,7 @@ export default function PostPage() {
                     )}
                   />
                 </button>
-                <span className="text-sm text-zinc-400">このアイテムを販売する</span>
+                <span className="text-sm text-zinc-600">このアイテムを販売する</span>
               </label>
               {item.forSale && (
                 <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function PostPage() {
                     onChange={(e) => updateItem(idx, { salePrice: e.target.value })}
                     placeholder="販売価格"
                     min={0}
-                    className="w-full rounded-lg border border-[#F5A623]/50 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#F5A623] focus:outline-none"
+                    className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
                   />
                   <span className="flex-shrink-0 text-sm text-zinc-500">円</span>
                 </div>
@@ -243,7 +243,7 @@ export default function PostPage() {
 
       {/* Visibility */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-zinc-400">公開範囲</label>
+        <label className="text-xs font-medium text-zinc-500">公開範囲</label>
         <div className="flex gap-2">
           {VISIBILITY_OPTIONS.map((opt) => (
             <button
@@ -252,8 +252,8 @@ export default function PostPage() {
               className={cn(
                 'flex-1 rounded-xl border py-2.5 text-sm font-medium transition-colors',
                 visibility === opt.value
-                  ? 'border-[#F5A623] text-[#F5A623]'
-                  : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : 'border-zinc-200 bg-white text-zinc-500 hover:border-zinc-400'
               )}
             >
               {opt.label}
@@ -263,10 +263,7 @@ export default function PostPage() {
       </div>
 
       {/* Submit */}
-      <button
-        className="w-full rounded-xl py-4 text-base font-bold text-black transition-opacity hover:opacity-90"
-        style={{ backgroundColor: '#F5A623' }}
-      >
+      <button className="w-full rounded-xl bg-zinc-900 py-4 text-base font-bold text-white transition-opacity hover:opacity-80">
         投稿する
       </button>
     </div>

@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #F8F8F8;
   --foreground: #111111;
+  --card: #FFFFFF;
+  --border: #E5E5E5;
+  --muted: #6B7280;
 }
 
 @theme inline {
@@ -10,16 +13,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-primary: #F5A623;
-  --color-background-dark: #0A0A0A;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.01em;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 /* Remove scrollbar on filter rows */

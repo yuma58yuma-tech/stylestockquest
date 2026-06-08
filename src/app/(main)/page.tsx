@@ -6,10 +6,10 @@ export default function FeedPage() {
 
   return (
     <div>
-      <div className="pb-3 pt-0.5">
-        <h1 className="text-base font-bold tracking-widest text-zinc-900 uppercase">SSQ</h1>
+      <div className="flex items-center justify-between pb-4 pt-1">
+        <h1 className="text-lg font-bold tracking-widest text-zinc-900 uppercase">SSQ</h1>
       </div>
-      <div className="grid grid-cols-2 gap-x-1.5 gap-y-4">
+      <div className="grid grid-cols-2 gap-3">
         {posts.map((post) => (
           <CoordinateCard key={post.id} post={post} />
         ))}

@@ -13,12 +13,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/', label: 'Feed', icon: House },
-  { href: '/ranking', label: 'Ranking', icon: Trophy },
-  { href: '/quest', label: 'Quest', icon: Swords },
-  { href: '/closet', label: 'Closet', icon: Shirt },
-  { href: '/marketplace', label: 'Market', icon: ShoppingBag },
-  { href: '/profile/user_01', label: 'Profile', icon: User },
+  { href: '/', label: 'フィード', icon: House },
+  { href: '/ranking', label: 'ランキング', icon: Trophy },
+  { href: '/quest', label: 'クエスト', icon: Swords },
+  { href: '/closet', label: 'クローゼット', icon: Shirt },
+  { href: '/marketplace', label: 'マーケット', icon: ShoppingBag },
+  { href: '/profile/user_01', label: 'プロフィール', icon: User },
 ];
 
 export function Sidebar() {

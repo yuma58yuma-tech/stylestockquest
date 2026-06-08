@@ -51,8 +51,8 @@ export default function VotePanel({ coordinateId: _coordinateId, initialVotes }:
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-zinc-300">Vote でスタイルを評価</h2>
+    <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-sm space-y-3">
+      <h2 className="text-sm font-semibold text-zinc-700">Vote でスタイルを評価</h2>
       <div className="grid grid-cols-3 gap-2">
         {ALL_VOTE_TYPES.map((type) => {
           const isSelected = selected.has(type);
@@ -64,15 +64,15 @@ export default function VotePanel({ coordinateId: _coordinateId, initialVotes }:
               className={[
                 'flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-150',
                 isSelected
-                  ? 'border-[#F5A623] bg-[#F5A623]/10 text-[#F5A623]'
-                  : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200',
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : 'border-zinc-200 bg-white text-zinc-500 hover:border-zinc-400',
                 isAnimating ? 'scale-90' : 'scale-100',
               ].join(' ')}
             >
               <span className="text-xs font-semibold leading-tight">
                 {VOTE_LABELS[type]}
               </span>
-              <span className={`text-xs font-bold ${isSelected ? 'text-[#F5A623]' : 'text-zinc-500'}`}>
+              <span className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
                 {counts[type].toLocaleString()}
               </span>
             </button>
@@ -80,7 +80,7 @@ export default function VotePanel({ coordinateId: _coordinateId, initialVotes }:
         })}
       </div>
       {selected.size > 0 && (
-        <p className="text-center text-xs text-[#F5A623]">
+        <p className="text-center text-xs text-zinc-500">
           {selected.size}種類のVoteを送りました
         </p>
       )}

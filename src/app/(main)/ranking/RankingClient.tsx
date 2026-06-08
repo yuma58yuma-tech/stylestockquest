@@ -66,21 +66,20 @@ export function RankingClient({ initialEntries }: Props) {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Trophy size={20} style={{ color: '#F5A623' }} />
-        <h1 className="text-xl font-bold text-white">ランキング</h1>
+        <Trophy size={20} className="text-zinc-900" />
+        <h1 className="text-xl font-bold text-zinc-900">ランキング</h1>
       </div>
 
       {/* Period tabs */}
-      <div className="flex rounded-xl border border-zinc-800 bg-zinc-900 p-1">
+      <div className="flex rounded-xl border border-zinc-200 bg-zinc-100 p-1">
         {PERIOD_TABS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => handleChange(value, category)}
             className={cn(
               'flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors',
-              period === value ? 'text-black' : 'text-zinc-500 hover:text-zinc-300'
+              period === value ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'
             )}
-            style={period === value ? { backgroundColor: '#F5A623' } : {}}
           >
             {label}
           </button>
@@ -96,8 +95,8 @@ export function RankingClient({ initialEntries }: Props) {
             className={cn(
               'flex-shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
               category === value
-                ? 'border-[#F5A623] text-[#F5A623]'
-                : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'
+                ? 'border-zinc-900 bg-zinc-900 text-white'
+                : 'border-zinc-200 bg-white text-zinc-500 hover:border-zinc-400'
             )}
           >
             {label}
@@ -116,26 +115,24 @@ export function RankingClient({ initialEntries }: Props) {
                 key={entry.userId + entry.rank}
                 href={`/profile/${entry.userId}`}
                 className={cn(
-                  'flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-colors',
-                  isCenter
-                    ? 'border-[#F5A623]/40 bg-[#F5A623]/5'
-                    : 'border-zinc-800 bg-zinc-900'
+                  'flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-colors bg-white shadow-sm',
+                  isCenter ? 'border-zinc-900' : 'border-zinc-100'
                 )}
               >
                 <TopBadge rank={entry.rank} />
                 <div className={cn(
                   'relative overflow-hidden rounded-full',
-                  isCenter ? 'h-16 w-16 ring-2 ring-[#F5A623]' : 'h-12 w-12'
+                  isCenter ? 'h-16 w-16 ring-2 ring-zinc-900' : 'h-12 w-12'
                 )}>
                   <Image src={entry.user.avatar} alt={entry.user.displayName} fill className="object-cover" sizes="64px" />
                 </div>
-                <span className={cn('font-semibold text-white', isCenter ? 'text-sm' : 'text-xs')}>
+                <span className={cn('font-semibold text-zinc-900', isCenter ? 'text-sm' : 'text-xs')}>
                   {entry.user.displayName}
                 </span>
                 <span className={cn('rounded px-1.5 py-0.5 text-xs font-bold', RANK_COLORS[entry.user.rank])}>
                   {entry.user.rank}
                 </span>
-                <span className={cn('font-bold', isCenter ? 'text-[#F5A623] text-sm' : 'text-zinc-300 text-xs')}>
+                <span className={cn('font-bold text-zinc-700', isCenter ? 'text-sm' : 'text-xs')}>
                   {entry.score.toLocaleString()} pt
                 </span>
               </Link>
@@ -151,23 +148,23 @@ export function RankingClient({ initialEntries }: Props) {
             <Link
               key={entry.userId + entry.rank}
               href={`/profile/${entry.userId}`}
-              className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 hover:border-zinc-700 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-3 shadow-sm hover:border-zinc-300 transition-colors"
             >
-              <span className="w-6 text-center text-sm font-bold text-zinc-500">{entry.rank}</span>
+              <span className="w-6 text-center text-sm font-bold text-zinc-400">{entry.rank}</span>
               <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full">
                 <Image src={entry.user.avatar} alt={entry.user.displayName} fill className="object-cover" sizes="36px" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-white">{entry.user.displayName}</span>
+                  <span className="text-sm font-medium text-zinc-900">{entry.user.displayName}</span>
                   <span className={`rounded px-1 py-0.5 text-xs font-bold ${RANK_COLORS[entry.user.rank]}`}>
                     {entry.user.rank}
                   </span>
                 </div>
-                <span className="text-xs text-zinc-500">@{entry.user.username}</span>
+                <span className="text-xs text-zinc-400">@{entry.user.username}</span>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className="text-sm font-bold text-white">{entry.score.toLocaleString()} pt</span>
+                <span className="text-sm font-bold text-zinc-900">{entry.score.toLocaleString()} pt</span>
                 <RankChange change={entry.rankChange} />
               </div>
             </Link>
@@ -176,7 +173,7 @@ export function RankingClient({ initialEntries }: Props) {
       )}
 
       {entries.length === 0 && (
-        <div className="py-16 text-center text-zinc-600">データがありません</div>
+        <div className="py-16 text-center text-zinc-400">データがありません</div>
       )}
     </div>
   );
