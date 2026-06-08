@@ -73,12 +73,12 @@ export default async function CoordinateDetailPage({ params }: Props) {
       {/* User info */}
       <div className="flex items-center gap-3">
         <Link href={`/profile/${user.id}`} className="flex items-center gap-3 min-w-0">
-          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-2 ring-zinc-200">
+          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-zinc-700">
             <Image src={user.avatar} alt={user.displayName} fill className="object-cover" sizes="40px" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-zinc-900">{user.displayName}</span>
+              <span className="font-semibold text-white">{user.displayName}</span>
               <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${RANK_COLORS[user.rank]}`}>
                 {user.rank}
               </span>
@@ -91,7 +91,7 @@ export default async function CoordinateDetailPage({ params }: Props) {
 
       {/* Title & tags */}
       <div>
-        <h1 className="text-xl font-bold text-zinc-900">{post.title}</h1>
+        <h1 className="text-xl font-bold text-white">{post.title}</h1>
         <p className="mt-1 text-sm text-zinc-500">{post.description}</p>
         {post.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
@@ -111,10 +111,10 @@ export default async function CoordinateDetailPage({ params }: Props) {
       />
 
       {/* Score breakdown */}
-      <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-sm space-y-3">
+      <div className="rounded-xl border border-zinc-800 bg-[#1a1a1a] p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-700">スコア内訳</h2>
-          <span className="text-lg font-bold text-zinc-900">
+          <h2 className="text-sm font-semibold text-zinc-400">スコア内訳</h2>
+          <span className="text-lg font-bold text-[#F5A623]">
             {Math.round(score.total).toLocaleString()} pts
           </span>
         </div>
@@ -124,21 +124,21 @@ export default async function CoordinateDetailPage({ params }: Props) {
             const pct = score.total > 0 ? (contribution / score.total) * 100 : 0;
             return (
               <div key={label} className="space-y-1">
-                <div className="flex justify-between text-xs text-zinc-400">
+                <div className="flex justify-between text-xs text-zinc-500">
                   <span>{label} × {multiplier} = {Math.round(contribution).toLocaleString()}</span>
                   <span>{value.toLocaleString()}</span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-zinc-100">
+                <div className="h-1.5 w-full rounded-full bg-zinc-800">
                   <div
-                    className="h-1.5 rounded-full bg-zinc-900"
-                    style={{ width: `${pct}%`, opacity: 0.7 }}
+                    className="h-1.5 rounded-full bg-[#F5A623]"
+                    style={{ width: `${pct}%`, opacity: 0.8 }}
                   />
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="flex items-center gap-1 text-xs text-zinc-400">
+        <div className="flex items-center gap-1 text-xs text-zinc-600">
           <Eye size={12} />
           <span>{post.viewCount.toLocaleString()} views</span>
         </div>
@@ -149,7 +149,7 @@ export default async function CoordinateDetailPage({ params }: Props) {
 
       {/* Worn items */}
       <div className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-zinc-400">
           <Tag size={14} />
           着用アイテム
         </h2>
@@ -157,23 +157,23 @@ export default async function CoordinateDetailPage({ params }: Props) {
           {post.items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between rounded-xl border border-zinc-100 bg-white px-4 py-3 shadow-sm"
+              className="flex items-center justify-between rounded-xl border border-zinc-800 bg-[#1a1a1a] px-4 py-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="rounded border border-zinc-200 px-1.5 py-0.5 text-xs text-zinc-500">
+                  <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-xs text-zinc-500">
                     {CATEGORY_LABELS[item.category] ?? item.category}
                   </span>
-                  <span className="text-xs text-zinc-400">{item.size}</span>
+                  <span className="text-xs text-zinc-600">{item.size}</span>
                 </div>
-                <p className="mt-1 text-sm font-medium text-zinc-900">
+                <p className="mt-1 text-sm font-medium text-white">
                   {item.brand} — {item.name}
                 </p>
-                <p className="text-xs text-zinc-400">{item.color}</p>
+                <p className="text-xs text-zinc-500">{item.color}</p>
               </div>
               <Link
                 href={`/marketplace?brand=${encodeURIComponent(item.brand)}`}
-                className="ml-3 flex flex-shrink-0 items-center gap-1 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-400 transition-colors"
+                className="ml-3 flex flex-shrink-0 items-center gap-1 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 <ShoppingBag size={12} />
                 マーケット

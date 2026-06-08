@@ -37,9 +37,9 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:w-52 lg:flex-col lg:border-r lg:border-zinc-200 lg:bg-white">
+    <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:w-52 lg:flex-col lg:border-r lg:border-zinc-800 lg:bg-[#111111]">
       <div className="flex h-14 items-center px-5">
-        <span className="text-base font-bold tracking-widest text-zinc-900 uppercase">SSQ</span>
+        <span className="text-base font-bold tracking-widest text-white uppercase">SSQ</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 px-3 pt-2">
@@ -48,7 +48,7 @@ export function Sidebar() {
           return (
             <Link key={label} href={href}
               className={cn('flex items-center gap-3 px-2 py-2 text-sm transition-colors',
-                isActive ? 'text-zinc-900' : 'text-zinc-400 hover:text-zinc-700')}>
+                isActive ? 'text-[#F5A623]' : 'text-zinc-500 hover:text-zinc-300')}>
               <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
               <span className={cn(isActive ? 'font-medium' : 'font-normal')}>{label}</span>
             </Link>
