@@ -1,9 +1,9 @@
 import { getUsers, getCoordinates, getMarketplaceListings, getQuests } from '@/lib/data';
 import { Users, Image, ShoppingBag, Activity, TrendingUp, Crown, Shield } from 'lucide-react';
 
-export default function AdminPage() {
+export default async function AdminPage() {
   const users = getUsers();
-  const coords = getCoordinates();
+  const coords = await getCoordinates();
   const listings = getMarketplaceListings();
   const quests = getQuests();
 

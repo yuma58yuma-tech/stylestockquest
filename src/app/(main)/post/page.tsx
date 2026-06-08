@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Camera, X, Plus, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import type { ItemCategory } from '@/types';
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
@@ -44,12 +46,15 @@ const emptyItem = (): ItemForm => ({
 });
 
 export default function PostPage() {
+  const router = useRouter();
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [items, setItems] = useState<ItemForm[]>([emptyItem()]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +62,67 @@ export default function PostPage() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
+  };
+
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      setError('タイトルを入力してください');
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError('ログインが必要です');
+      setSubmitting(false);
+      return;
+    }
+
+    const seed = Math.floor(Math.random() * 1000);
+    const imageUrl = preview ?? `https://picsum.photos/seed/${seed}/600/800`;
+    const tags = hashtags.trim() ? hashtags.trim().split(/\s+/) : [];
+
+    const { data: coord, error: coordError } = await supabase
+      .from('coordinates')
+      .insert({
+        user_id: user.id,
+        image_url: imageUrl,
+        title: title.trim(),
+        description: description.trim(),
+        tags,
+        is_public: visibility === 'public',
+      })
+      .select('id')
+      .single();
+
+    if (coordError || !coord) {
+      setError(coordError?.message ?? '投稿に失敗しました');
+      setSubmitting(false);
+      return;
+    }
+
+    const itemRows = items
+      .filter((it) => it.brand || it.name)
+      .map((it) => ({
+        coordinate_id: coord.id,
+        brand: it.brand,
+        name: it.name,
+        category: it.category,
+        size: it.size,
+        color: it.color,
+        for_sale: it.forSale,
+        sale_price: it.forSale && it.salePrice ? parseInt(it.salePrice) : null,
+      }));
+
+    if (itemRows.length > 0) {
+      await supabase.from('coordinate_items').insert(itemRows);
+    }
+
+    router.push('/');
+    router.refresh();
   };
 
   const updateItem = (idx: number, patch: Partial<ItemForm>) => {
@@ -263,8 +329,13 @@ export default function PostPage() {
       </div>
 
       {/* Submit */}
-      <button className="w-full rounded-xl bg-zinc-900 py-4 text-base font-bold text-white transition-opacity hover:opacity-80">
-        投稿する
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="w-full rounded-xl bg-zinc-900 py-4 text-base font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50"
+      >
+        {submitting ? '投稿中...' : '投稿する'}
       </button>
     </div>
   );

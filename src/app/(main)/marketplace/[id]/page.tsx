@@ -45,7 +45,8 @@ export default async function MarketplaceDetailPage({ params }: Props) {
   const condition = CONDITION_LABELS[listing.condition];
 
   // コーデ着用例：このブランドが含まれる投稿を検索
-  const relatedCoords = getCoordinates()
+  const allCoords = await getCoordinates();
+  const relatedCoords = allCoords
     .filter((p) => p.items.some((i) => i.brand === item.brand))
     .slice(0, 4);
 

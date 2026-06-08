@@ -1,8 +1,8 @@
 import { getCoordinates } from '@/lib/data';
 import { CoordinateCard } from '@/components/feed/CoordinateCard';
 
-export default function FeedPage() {
-  const posts = getCoordinates();
+export default async function FeedPage() {
+  const posts = await getCoordinates();
 
   return (
     <div>

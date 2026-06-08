@@ -39,7 +39,7 @@ interface Props {
 
 export default async function CoordinateDetailPage({ params }: Props) {
   const { id } = await params;
-  const post = getCoordinateById(id);
+  const post = await getCoordinateById(id);
   if (!post) notFound();
 
   const { user } = post;
