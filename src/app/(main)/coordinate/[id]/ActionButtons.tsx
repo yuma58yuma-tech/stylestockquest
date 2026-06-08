@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Bookmark, Share2, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { recalcScore } from '@/lib/supabase/storage';
 
 interface Props {
   coordinateId: string;
@@ -18,6 +19,28 @@ export function ActionButtons({ coordinateId, likeCount, saveCount, voteCount }:
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [voted, setVoted] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setReady(true); return; }
+
+      const now = new Date();
+      const week = `${now.getFullYear()}-W${String(Math.ceil(now.getDate() / 7)).padStart(2, '0')}`;
+
+      const [likeRow, saveRow, voteRow] = await Promise.all([
+        supabase.from('likes').select('id').match({ user_id: user.id, coordinate_id: coordinateId }).maybeSingle(),
+        supabase.from('saves').select('id').match({ user_id: user.id, coordinate_id: coordinateId }).maybeSingle(),
+        supabase.from('votes').select('id').match({ user_id: user.id, coordinate_id: coordinateId, period: week }).maybeSingle(),
+      ]);
+
+      setLiked(!!likeRow.data);
+      setSaved(!!saveRow.data);
+      setVoted(!!voteRow.data);
+      setReady(true);
+    });
+  }, [coordinateId]);
 
   const supabase = createClient();
 
@@ -36,6 +59,7 @@ export function ActionButtons({ coordinateId, likeCount, saveCount, voteCount }:
       setLikes((n) => n + 1);
       setLiked(true);
     }
+    recalcScore(coordinateId);
   };
 
   const handleSave = async () => {
@@ -53,6 +77,7 @@ export function ActionButtons({ coordinateId, likeCount, saveCount, voteCount }:
       setSaves((n) => n + 1);
       setSaved(true);
     }
+    recalcScore(coordinateId);
   };
 
   const handleVote = async () => {
@@ -73,6 +98,7 @@ export function ActionButtons({ coordinateId, likeCount, saveCount, voteCount }:
       await supabase.from('coordinates').update({ vote_count: votes + 1 }).eq('id', coordinateId);
       setVotes((n) => n + 1);
       setVoted(true);
+      recalcScore(coordinateId);
     }
   };
 
@@ -83,7 +109,7 @@ export function ActionButtons({ coordinateId, likeCount, saveCount, voteCount }:
   };
 
   return (
-    <div className="flex gap-3">
+    <div className={`flex gap-3 transition-opacity ${ready ? 'opacity-100' : 'opacity-50'}`}>
       <button
         onClick={handleLike}
         className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-3 text-sm font-medium transition-colors shadow-sm ${

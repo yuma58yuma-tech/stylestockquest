@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Camera, X, Plus, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { uploadImage } from '@/lib/supabase/storage';
 import type { ItemCategory } from '@/types';
 
 const CATEGORIES: { value: ItemCategory; label: string }[] = [
@@ -55,11 +56,14 @@ export default function PostPage() {
   const [items, setItems] = useState<ItemForm[]>([emptyItem()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const selectedFileRef = useRef<File | null>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    selectedFileRef.current = file;
     const url = URL.createObjectURL(file);
     setPreview(url);
   };
@@ -81,8 +85,19 @@ export default function PostPage() {
       return;
     }
 
-    const seed = Math.floor(Math.random() * 1000);
-    const imageUrl = preview ?? `https://picsum.photos/seed/${seed}/600/800`;
+    let imageUrl = '';
+    if (selectedFileRef.current) {
+      setUploadProgress('画像をアップロード中...');
+      const uploaded = await uploadImage('coordinates', selectedFileRef.current, user.id);
+      if (!uploaded) {
+        setError('画像のアップロードに失敗しました');
+        setSubmitting(false);
+        setUploadProgress('');
+        return;
+      }
+      imageUrl = uploaded;
+    }
+    setUploadProgress('');
     const tags = hashtags.trim() ? hashtags.trim().split(/\s+/) : [];
 
     const { data: coord, error: coordError } = await supabase
@@ -335,7 +350,7 @@ export default function PostPage() {
         disabled={submitting}
         className="w-full rounded-xl bg-zinc-900 py-4 text-base font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50"
       >
-        {submitting ? '投稿中...' : '投稿する'}
+        {uploadProgress || (submitting ? '投稿中...' : '投稿する')}
       </button>
     </div>
   );

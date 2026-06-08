@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronDown, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { uploadImage } from '@/lib/supabase/storage';
 import type { ClosetItem, ItemCategory } from '@/types';
 
 const FILTERS: { value: ItemCategory | 'all'; label: string }[] = [
@@ -59,10 +60,20 @@ export function ClosetClient({ items: initialItems }: Props) {
   const [form, setForm] = useState<AddForm>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = activeFilter === 'all'
     ? items
     : items.filter((i) => i.category === activeFilter);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const handleAdd = async () => {
     if (!form.brand || !form.name) {
@@ -76,7 +87,12 @@ export function ClosetClient({ items: initialItems }: Props) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError('ログインが必要です'); setSaving(false); return; }
 
-    const seed = Math.floor(Math.random() * 1000);
+    let imageUrl = `https://picsum.photos/seed/${Date.now()}/400/400`;
+    if (imageFile) {
+      const uploaded = await uploadImage('closet', imageFile, user.id);
+      if (uploaded) imageUrl = uploaded;
+    }
+
     const { data, error: dbError } = await supabase
       .from('closet_items')
       .insert({
@@ -86,7 +102,7 @@ export function ClosetClient({ items: initialItems }: Props) {
         category: form.category,
         size: form.size,
         color: form.color,
-        image_url: `https://picsum.photos/seed/${seed}/400/400`,
+        image_url: imageUrl,
         purchase_price: form.purchasePrice ? parseInt(form.purchasePrice) : null,
       })
       .select()
@@ -115,6 +131,8 @@ export function ClosetClient({ items: initialItems }: Props) {
 
     setItems((prev) => [newItem, ...prev]);
     setForm(emptyForm());
+    setImageFile(null);
+    setImagePreview(null);
     setShowModal(false);
     setSaving(false);
     router.refresh();
@@ -196,10 +214,26 @@ export function ClosetClient({ items: initialItems }: Props) {
           <div className="w-full max-w-md rounded-t-2xl bg-white p-6 space-y-4 sm:rounded-2xl">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-zinc-900">アイテムを追加</h2>
-              <button onClick={() => { setShowModal(false); setError(null); setForm(emptyForm()); }}>
+              <button onClick={() => { setShowModal(false); setError(null); setForm(emptyForm()); setImageFile(null); setImagePreview(null); }}>
                 <X size={20} className="text-zinc-400" />
               </button>
             </div>
+
+            {/* 画像選択 */}
+            <div
+              onClick={() => imageInputRef.current?.click()}
+              className="relative flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-zinc-200 bg-zinc-50 hover:border-zinc-400 transition-colors"
+            >
+              {imagePreview ? (
+                <Image src={imagePreview} alt="preview" fill className="object-cover rounded-xl" sizes="400px" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-zinc-400">
+                  <Camera size={28} strokeWidth={1.5} />
+                  <span className="text-xs">タップして画像を選択</span>
+                </div>
+              )}
+            </div>
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
 
             <div className="grid grid-cols-2 gap-3">
               <input
