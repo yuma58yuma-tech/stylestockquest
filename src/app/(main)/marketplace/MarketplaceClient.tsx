@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, SlidersHorizontal } from 'lucide-react';
+import { Heart, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ListingModal } from './ListingModal';
 import type { MarketplaceListingWithSeller, ItemCategory } from '@/types';
 
 const CATEGORY_FILTERS: { value: ItemCategory | 'all'; label: string }[] = [
@@ -35,9 +36,11 @@ interface Props {
   listings: MarketplaceListingWithSeller[];
 }
 
-export function MarketplaceClient({ listings }: Props) {
+export function MarketplaceClient({ listings: initialListings }: Props) {
+  const [listings, setListings] = useState(initialListings);
   const [category, setCategory] = useState<ItemCategory | 'all'>('all');
   const [priceRange, setPriceRange] = useState('all');
+  const [showModal, setShowModal] = useState(false);
 
   const filtered = listings.filter((l) => {
     const catOk = category === 'all' || l.item.category === category;
@@ -52,10 +55,27 @@ export function MarketplaceClient({ listings }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="pb-1 pt-1">
-        <h1 className="text-2xl font-bold tracking-tight text-white">Market</h1>
-        <p className="text-xs text-zinc-600 mt-0.5">{filtered.length} items</p>
+      <div className="flex items-center justify-between pb-1 pt-1">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Market</h1>
+          <p className="text-xs text-zinc-600 mt-0.5">{filtered.length} items</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-black"
+          style={{ backgroundColor: '#F5A623' }}
+        >
+          <Plus size={12} strokeWidth={2.5} />
+          出品する
+        </button>
       </div>
+
+      {showModal && (
+        <ListingModal
+          onClose={() => setShowModal(false)}
+          onListed={() => window.location.reload()}
+        />
+      )}
 
       {/* Category filter */}
       <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
