@@ -17,7 +17,7 @@ import type {
   RankingCategory,
   RankingPeriod,
   Quest,
-  ScoreBreakdown,
+  PostScoreBreakdown,
   ItemCategory,
 } from '@/types';
 
@@ -79,7 +79,7 @@ function dbCoordToPost(row: DbCoordinate): CoordinatePostWithUser {
   const post: CoordinatePost = {
     id: row.id,
     userId: row.user_id,
-    imageUrl: row.image_url ?? '',
+    imageUrl: row.image_url || `https://picsum.photos/seed/${row.id}/400/600`,
     title: row.title ?? '',
     description: row.description ?? '',
     tags: row.tags ?? [],
@@ -387,7 +387,7 @@ export function getQuestsByType(type: Quest['type']): Quest[] {
 
 // ---- Score ----
 
-export function calcScore(breakdown: Omit<ScoreBreakdown, 'total'>): ScoreBreakdown {
+export function calcScore(breakdown: Omit<PostScoreBreakdown, 'total'>): PostScoreBreakdown {
   const total =
     breakdown.likes * 3 +
     breakdown.saves * 5 +
@@ -398,7 +398,7 @@ export function calcScore(breakdown: Omit<ScoreBreakdown, 'total'>): ScoreBreakd
   return { ...breakdown, total };
 }
 
-export function getScoreBreakdown(post: CoordinatePost): ScoreBreakdown {
+export function getScoreBreakdown(post: CoordinatePost): PostScoreBreakdown {
   return calcScore({
     likes: post.likeCount,
     saves: post.saveCount,

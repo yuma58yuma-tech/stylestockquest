@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUp, ArrowDown, Minus, Crown, Medal, Award, Trophy } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, Crown, Medal, Award, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { getRanking } from '@/lib/data';
-import type { RankingCategory, RankingPeriod, RankingEntryWithUser } from '@/types';
+import { getScoreBreakdown } from '@/lib/score';
+import type { RankingCategory, RankingPeriod, RankingEntryWithUser, ScoreBreakdown } from '@/types';
 
 const PERIOD_TABS: { value: RankingPeriod; label: string }[] = [
   { value: 'daily', label: 'Daily' },
@@ -30,6 +31,66 @@ const RANK_COLORS: Record<string, string> = {
   Bronze: 'bg-amber-700 text-white', Silver: 'bg-zinc-400 text-black',
   Gold: 'bg-yellow-400 text-black', Platinum: 'bg-cyan-300 text-black',
 };
+
+function ScoreBar({ breakdown }: { breakdown: ScoreBreakdown }) {
+  const total = breakdown.peerScore + breakdown.activityScore;
+  const peerPct = total > 0 ? (breakdown.peerScore / total) * 100 : 70;
+  const actPct = 100 - peerPct;
+  return (
+    <div className="w-full">
+      <div className="flex h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+        <div className="bg-yellow-400 transition-all" style={{ width: `${peerPct.toFixed(1)}%` }} />
+        <div className="bg-blue-400 transition-all" style={{ width: `${actPct.toFixed(1)}%` }} />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-zinc-400">
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-yellow-400" />他人評価 {breakdown.peerScore.toLocaleString()}pt</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-blue-400" />自己活動 {breakdown.activityScore.toLocaleString()}pt</span>
+      </div>
+    </div>
+  );
+}
+
+function ScoreAccordion({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [bd, setBd] = useState<ScoreBreakdown | null>(null);
+
+  const handleToggle = () => {
+    if (!open && !bd) setBd(getScoreBreakdown(userId));
+    setOpen((v) => !v);
+  };
+
+  return (
+    <div className="w-full">
+      <button
+        onClick={handleToggle}
+        className="flex w-full items-center justify-between text-[11px] text-zinc-400 hover:text-zinc-600"
+      >
+        <span>なぜこのスコア？</span>
+        {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+      </button>
+      {open && bd && (
+        <div className="mt-2 space-y-1 rounded-lg bg-zinc-50 p-2 text-[11px] text-zinc-600">
+          <p className="mb-1 font-semibold text-zinc-700">他人からの評価（×0.7）</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+            <span>Vote獲得 ×20pt</span><span className="text-right font-medium">{bd.breakdown.votes}件 = {bd.breakdown.votes * 20}pt</span>
+            <span>保存獲得 ×10pt</span><span className="text-right font-medium">{bd.breakdown.saves}件 = {bd.breakdown.saves * 10}pt</span>
+            <span>いいね獲得 ×5pt</span><span className="text-right font-medium">{bd.breakdown.likes}件 = {bd.breakdown.likes * 5}pt</span>
+            <span>コメント獲得 ×3pt</span><span className="text-right font-medium">{bd.breakdown.comments}件 = {bd.breakdown.comments * 3}pt</span>
+            <span>商品購入 ×50pt</span><span className="text-right font-medium">{bd.breakdown.purchases}件 = {bd.breakdown.purchases * 50}pt</span>
+          </div>
+          <p className="mb-1 mt-2 font-semibold text-zinc-700">自己アクティビティ（×0.3）</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+            <span>ログイン ×2pt/日</span><span className="text-right font-medium">{bd.breakdown.loginDays}日 = {bd.breakdown.loginDays * 2}pt</span>
+            <span>出品数 ×5pt</span><span className="text-right font-medium">{bd.breakdown.listings}件 = {bd.breakdown.listings * 5}pt</span>
+            <span>レビュー評価 ×10pt</span><span className="text-right font-medium">avg {bd.breakdown.reviews} = {Math.round(bd.breakdown.reviews * 10)}pt</span>
+            <span>投稿数 ×3pt</span><span className="text-right font-medium">{bd.breakdown.posts}件 = {bd.breakdown.posts * 3}pt</span>
+            <span>Quest達成 ×15pt</span><span className="text-right font-medium">{bd.breakdown.quests}件 = {bd.breakdown.quests * 15}pt</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function TopBadge({ rank }: { rank: number }) {
   if (rank === 1) return <Crown size={20} className="text-yellow-400" />;
@@ -194,26 +255,32 @@ export function RankingClient({ initialEntries }: Props) {
           {rest.length > 0 && (
             <div className="space-y-2">
               {rest.map((entry) => (
-                <Link key={entry.userId + entry.rank} href={`/profile/${entry.userId}`}
-                  className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-3 shadow-sm hover:border-zinc-300 transition-colors">
-                  <span className="w-6 text-center text-sm font-bold text-zinc-400">{entry.rank}</span>
-                  <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full">
-                    <Image src={entry.user.avatar} alt={entry.user.displayName} fill className="object-cover" sizes="36px" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-zinc-900">{entry.user.displayName}</span>
-                      <span className={`rounded px-1 py-0.5 text-xs font-bold ${RANK_COLORS[entry.user.rank] ?? 'bg-zinc-500 text-white'}`}>
-                        {entry.user.rank}
-                      </span>
+                <div key={entry.userId + entry.rank}
+                  className="rounded-xl border border-zinc-100 bg-white px-4 py-3 shadow-sm hover:border-zinc-300 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 text-center text-sm font-bold text-zinc-400">{entry.rank}</span>
+                    <Link href={`/profile/${entry.userId}`} className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full">
+                      <Image src={entry.user.avatar} alt={entry.user.displayName} fill className="object-cover" sizes="36px" />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <Link href={`/profile/${entry.userId}`} className="text-sm font-medium text-zinc-900">{entry.user.displayName}</Link>
+                        <span className={`rounded px-1 py-0.5 text-xs font-bold ${RANK_COLORS[entry.user.rank] ?? 'bg-zinc-500 text-white'}`}>
+                          {entry.user.rank}
+                        </span>
+                      </div>
+                      <span className="text-xs text-zinc-400">@{entry.user.username}</span>
                     </div>
-                    <span className="text-xs text-zinc-400">@{entry.user.username}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-sm font-bold text-zinc-900">{entry.score.toLocaleString()} pt</span>
+                      <RankChange change={entry.rankChange} />
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-sm font-bold text-zinc-900">{entry.score.toLocaleString()} pt</span>
-                    <RankChange change={entry.rankChange} />
+                  <div className="mt-2 space-y-1.5 pl-9">
+                    <ScoreBar breakdown={getScoreBreakdown(entry.userId)} />
+                    <ScoreAccordion userId={entry.userId} />
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

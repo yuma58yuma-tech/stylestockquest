@@ -146,7 +146,8 @@ export interface RankingEntry {
   rankChange: number; // positive = up, negative = down, 0 = same
 }
 
-export interface ScoreBreakdown {
+/** 投稿単体のスコア内訳（コーデ詳細画面用） */
+export interface PostScoreBreakdown {
   likes: number;
   saves: number;
   votes: number;
@@ -154,6 +155,25 @@ export interface ScoreBreakdown {
   views: number;
   questClears: number;
   total: number;
+}
+
+/** ユーザー総合スコアの内訳（ランキング用） */
+export interface ScoreBreakdown {
+  peerScore: number;
+  activityScore: number;
+  total: number;
+  breakdown: {
+    votes: number;
+    saves: number;
+    likes: number;
+    comments: number;
+    purchases: number;
+    loginDays: number;
+    listings: number;
+    reviews: number;
+    posts: number;
+    quests: number;
+  };
 }
 
 export interface Quest {

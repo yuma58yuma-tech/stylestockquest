@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getCoordinates } from '@/lib/data';
 import { CoordinateCard } from '@/components/feed/CoordinateCard';
 
