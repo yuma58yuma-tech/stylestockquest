@@ -4,7 +4,7 @@ import { Users, Image, ShoppingBag, Activity, TrendingUp, Crown, Shield } from '
 export default async function AdminPage() {
   const users = getUsers();
   const coords = await getCoordinates();
-  const listings = getMarketplaceListings();
+  const listings = await getMarketplaceListings();
   const quests = getQuests();
 
   const activeListings = listings.length;

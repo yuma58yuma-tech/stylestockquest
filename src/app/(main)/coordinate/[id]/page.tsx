@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Heart, Bookmark, Share2, ChevronUp, ShoppingBag, Tag, Eye } from 'lucide-react';
+import { ShoppingBag, Tag, Eye } from 'lucide-react';
 import { getCoordinateById, getScoreBreakdown } from '@/lib/data';
 import VotePanel from '@/components/coordinate/VotePanel';
 import { getVotesForCoordinate } from '@/mock/votes';
+import { ActionButtons } from './ActionButtons';
+import { FollowButton } from './FollowButton';
 
 const RANK_COLORS: Record<string, string> = {
   S: 'bg-yellow-400 text-black',
@@ -84,9 +86,7 @@ export default async function CoordinateDetailPage({ params }: Props) {
             <p className="text-xs text-zinc-400">@{user.username}</p>
           </div>
         </Link>
-        <button className="ml-auto rounded-full border border-zinc-200 px-4 py-1.5 text-sm text-zinc-600 hover:border-zinc-400 transition-colors">
-          フォロー
-        </button>
+        <FollowButton targetUserId={user.id} />
       </div>
 
       {/* Title & tags */}
@@ -103,23 +103,12 @@ export default async function CoordinateDetailPage({ params }: Props) {
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-3">
-        <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 transition-colors shadow-sm">
-          <Heart size={18} />
-          <span>{post.likeCount.toLocaleString()}</span>
-        </button>
-        <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 transition-colors shadow-sm">
-          <Bookmark size={18} />
-          <span>{post.saveCount.toLocaleString()}</span>
-        </button>
-        <button className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-80">
-          <ChevronUp size={18} />
-          <span>Vote {post.voteCount.toLocaleString()}</span>
-        </button>
-        <button className="flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-500 hover:border-zinc-400 transition-colors shadow-sm">
-          <Share2 size={18} />
-        </button>
-      </div>
+      <ActionButtons
+        coordinateId={post.id}
+        likeCount={post.likeCount}
+        saveCount={post.saveCount}
+        voteCount={post.voteCount}
+      />
 
       {/* Score breakdown */}
       <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-sm space-y-3">

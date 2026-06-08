@@ -172,24 +172,189 @@ export function getCoordinatesByUser(userId: string): CoordinatePostWithUser[] {
 
 // ---- Closet ----
 
-export function getClosetItems(userId = 'user_01', category?: ItemCategory): ClosetItem[] {
-  const items = MOCK_CLOSET_ITEMS.filter((c) => c.userId === userId);
-  if (category) return items.filter((c) => c.category === category);
-  return items;
+export async function getClosetItems(userId?: string, category?: ItemCategory): Promise<ClosetItem[]> {
+  const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const targetId = userId ?? user?.id;
+
+  if (!targetId) {
+    const items = MOCK_CLOSET_ITEMS.filter((c) => c.userId === 'user_01');
+    return category ? items.filter((c) => c.category === category) : items;
+  }
+
+  let query = supabase
+    .from('closet_items')
+    .select('*')
+    .eq('user_id', targetId)
+    .order('created_at', { ascending: false });
+
+  if (category) query = query.eq('category', category);
+
+  const { data, error } = await query;
+
+  if (error || !data || data.length === 0) {
+    const items = MOCK_CLOSET_ITEMS.filter((c) => c.userId === 'user_01');
+    return category ? items.filter((c) => c.category === category) : items;
+  }
+
+  return data.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    brand: row.brand ?? '',
+    name: row.name ?? '',
+    category: (row.category ?? 'other') as ItemCategory,
+    size: row.size ?? '',
+    color: row.color ?? '',
+    purchasePrice: row.purchase_price ?? undefined,
+    wearCount: row.wear_count,
+    isListed: row.is_listed,
+    imageUrl: row.image_url ?? `https://picsum.photos/seed/${row.id}/400/400`,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function addClosetItem(item: Omit<ClosetItem, 'id' | 'userId' | 'createdAt' | 'wearCount' | 'isListed'>): Promise<ClosetItem | null> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('closet_items')
+    .insert({
+      user_id: user.id,
+      brand: item.brand,
+      name: item.name,
+      category: item.category,
+      size: item.size,
+      color: item.color,
+      image_url: item.imageUrl,
+      purchase_price: item.purchasePrice ?? null,
+    })
+    .select()
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    brand: data.brand ?? '',
+    name: data.name ?? '',
+    category: (data.category ?? 'other') as ItemCategory,
+    size: data.size ?? '',
+    color: data.color ?? '',
+    purchasePrice: data.purchase_price ?? undefined,
+    wearCount: data.wear_count,
+    isListed: data.is_listed,
+    imageUrl: data.image_url ?? '',
+    createdAt: data.created_at,
+  };
 }
 
 // ---- Marketplace ----
 
-export function getMarketplaceListings(limit?: number): MarketplaceListingWithSeller[] {
-  const active = MOCK_MARKETPLACE_LISTINGS.filter((l) => l.status === 'active');
-  const sliced = limit ? active.slice(0, limit) : active;
-  return sliced.map(attachSeller);
+type DbMarketplaceItem = {
+  id: string;
+  seller_id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  condition: string;
+  size: string | null;
+  brand: string | null;
+  category: string | null;
+  images: string[] | null;
+  status: string;
+  created_at: string;
+  profiles: { username: string; display_name: string | null; avatar_url: string | null; rank: string; rank_points: number; follower_count: number; following_count: number } | null;
+};
+
+function dbMarketToListing(row: DbMarketplaceItem): MarketplaceListingWithSeller {
+  const seller: User = {
+    id: row.seller_id,
+    username: row.profiles?.username ?? 'unknown',
+    displayName: row.profiles?.display_name ?? row.profiles?.username ?? 'unknown',
+    avatar: row.profiles?.avatar_url ?? `https://picsum.photos/seed/${row.seller_id}/200`,
+    bio: '',
+    rank: 'B',
+    rankPoints: row.profiles?.rank_points ?? 0,
+    followersCount: row.profiles?.follower_count ?? 0,
+    followingCount: row.profiles?.following_count ?? 0,
+    postCount: 0,
+    createdAt: row.created_at,
+  };
+
+  const item: ClosetItem = {
+    id: row.id,
+    userId: row.seller_id,
+    brand: row.brand ?? '',
+    name: row.title,
+    category: (row.category ?? 'other') as ItemCategory,
+    size: row.size ?? '',
+    color: '',
+    wearCount: 0,
+    isListed: true,
+    imageUrl: row.images?.[0] ?? `https://picsum.photos/seed/${row.id}/400/400`,
+    createdAt: row.created_at,
+  };
+
+  return {
+    id: row.id,
+    sellerId: row.seller_id,
+    item,
+    price: row.price,
+    condition: (row.condition ?? 'good') as MarketplaceListing['condition'],
+    description: row.description ?? '',
+    status: (row.status ?? 'active') as MarketplaceListing['status'],
+    viewCount: 0,
+    likeCount: 0,
+    createdAt: row.created_at,
+    seller,
+  };
 }
 
-export function getMarketplaceListingById(id: string): MarketplaceListingWithSeller | undefined {
-  const listing = MOCK_MARKETPLACE_LISTINGS.find((l) => l.id === id);
-  if (!listing) return undefined;
-  return attachSeller(listing);
+const MARKETPLACE_QUERY = `
+  id, seller_id, title, description, price, condition, size, brand, category, images, status, created_at,
+  profiles ( username, display_name, avatar_url, rank, rank_points, follower_count, following_count )
+` as const;
+
+export async function getMarketplaceListings(limit?: number): Promise<MarketplaceListingWithSeller[]> {
+  const supabase = createClient();
+  let query = supabase
+    .from('marketplace_items')
+    .select(MARKETPLACE_QUERY)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+
+  if (error || !data || data.length === 0) {
+    const active = MOCK_MARKETPLACE_LISTINGS.filter((l) => l.status === 'active');
+    const sliced = limit ? active.slice(0, limit) : active;
+    return sliced.map(attachSeller);
+  }
+
+  return (data as unknown as DbMarketplaceItem[]).map(dbMarketToListing);
+}
+
+export async function getMarketplaceListingById(id: string): Promise<MarketplaceListingWithSeller | undefined> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('marketplace_items')
+    .select(MARKETPLACE_QUERY)
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    const listing = MOCK_MARKETPLACE_LISTINGS.find((l) => l.id === id);
+    if (!listing) return undefined;
+    return attachSeller(listing);
+  }
+
+  return dbMarketToListing(data as unknown as DbMarketplaceItem);
 }
 
 export function getMarketplaceListingsBySeller(sellerId: string): MarketplaceListingWithSeller[] {

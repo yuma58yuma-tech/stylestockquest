@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Heart, ChevronUp, UserPlus, MessageCircle, ShoppingBag, Trophy, Bookmark, Bell } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 import { MOCK_NOTIFICATIONS } from '@/mock/notifications';
 import { MOCK_USERS } from '@/mock/users';
 import { cn } from '@/lib/utils';
@@ -28,12 +29,51 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}日前`;
 }
 
-export default function NotificationsPage() {
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+type NotifRow = {
+  id: string;
+  type: string;
+  message: string | null;
+  is_read: boolean;
+  created_at: string;
+  sender_id: string | null;
+  profiles: { username: string; avatar_url: string | null; display_name: string | null } | null;
+};
+
+export default async function NotificationsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let notifications: Notification[] = [];
+
+  if (user) {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, type, message, is_read, created_at, sender_id, profiles:sender_id ( username, avatar_url, display_name )')
+      .eq('recipient_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (data && data.length > 0) {
+      notifications = (data as unknown as NotifRow[]).map((row) => ({
+        id: row.id,
+        userId: user.id,
+        type: (row.type as Notification['type']) ?? 'like',
+        fromUserId: row.sender_id ?? undefined,
+        message: row.message ?? '',
+        read: row.is_read,
+        createdAt: row.created_at,
+      }));
+    }
+  }
+
+  if (notifications.length === 0) {
+    notifications = MOCK_NOTIFICATIONS;
+  }
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell size={20} style={{ color: '#F5A623' }} />
@@ -44,13 +84,11 @@ export default function NotificationsPage() {
             </span>
           )}
         </div>
-        <button className="text-xs text-zinc-500 hover:text-zinc-300">すべて既読</button>
       </div>
 
-      {/* List */}
       <div className="space-y-1">
-        {MOCK_NOTIFICATIONS.map((notif) => {
-          const config = TYPE_CONFIG[notif.type];
+        {notifications.map((notif) => {
+          const config = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.like;
           const Icon = config.icon;
           const fromUser = notif.fromUserId ? MOCK_USERS.find((u) => u.id === notif.fromUserId) : null;
 
@@ -62,7 +100,6 @@ export default function NotificationsPage() {
                 notif.read ? 'bg-transparent' : 'bg-zinc-900'
               )}
             >
-              {/* Icon or avatar */}
               <div className="flex-shrink-0">
                 {fromUser ? (
                   <div className="relative h-10 w-10 overflow-hidden rounded-full">
@@ -77,16 +114,12 @@ export default function NotificationsPage() {
                   </div>
                 )}
               </div>
-
-              {/* Content */}
               <div className="min-w-0 flex-1">
                 <p className={cn('text-sm leading-relaxed', notif.read ? 'text-zinc-500' : 'text-zinc-200')}>
                   {notif.message}
                 </p>
                 <p className="mt-0.5 text-xs text-zinc-600">{timeAgo(notif.createdAt)}</p>
               </div>
-
-              {/* Unread dot */}
               {!notif.read && (
                 <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#F5A623' }} />
               )}

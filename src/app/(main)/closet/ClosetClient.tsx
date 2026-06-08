@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Tag } from 'lucide-react';
+import { Plus, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import type { ClosetItem, ItemCategory } from '@/types';
 
 const FILTERS: { value: ItemCategory | 'all'; label: string }[] = [
@@ -16,23 +18,117 @@ const FILTERS: { value: ItemCategory | 'all'; label: string }[] = [
   { value: 'accessory', label: 'アクセ' },
 ];
 
+const CATEGORIES: { value: ItemCategory; label: string }[] = [
+  { value: 'tops', label: 'トップス' },
+  { value: 'bottoms', label: 'ボトムス' },
+  { value: 'outerwear', label: 'アウター' },
+  { value: 'shoes', label: 'シューズ' },
+  { value: 'bag', label: 'バッグ' },
+  { value: 'accessory', label: 'アクセサリー' },
+  { value: 'hat', label: 'ハット' },
+  { value: 'other', label: 'その他' },
+];
+
 interface Props {
   items: ClosetItem[];
 }
 
-export function ClosetClient({ items }: Props) {
+interface AddForm {
+  brand: string;
+  name: string;
+  category: ItemCategory;
+  size: string;
+  color: string;
+  purchasePrice: string;
+}
+
+const emptyForm = (): AddForm => ({
+  brand: '',
+  name: '',
+  category: 'tops',
+  size: '',
+  color: '',
+  purchasePrice: '',
+});
+
+export function ClosetClient({ items: initialItems }: Props) {
+  const router = useRouter();
+  const [items, setItems] = useState<ClosetItem[]>(initialItems);
   const [activeFilter, setActiveFilter] = useState<ItemCategory | 'all'>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState<AddForm>(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = activeFilter === 'all'
     ? items
     : items.filter((i) => i.category === activeFilter);
+
+  const handleAdd = async () => {
+    if (!form.brand || !form.name) {
+      setError('ブランドとアイテム名は必須です');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setError('ログインが必要です'); setSaving(false); return; }
+
+    const seed = Math.floor(Math.random() * 1000);
+    const { data, error: dbError } = await supabase
+      .from('closet_items')
+      .insert({
+        user_id: user.id,
+        brand: form.brand,
+        name: form.name,
+        category: form.category,
+        size: form.size,
+        color: form.color,
+        image_url: `https://picsum.photos/seed/${seed}/400/400`,
+        purchase_price: form.purchasePrice ? parseInt(form.purchasePrice) : null,
+      })
+      .select()
+      .single();
+
+    if (dbError || !data) {
+      setError(dbError?.message ?? '追加に失敗しました');
+      setSaving(false);
+      return;
+    }
+
+    const newItem: ClosetItem = {
+      id: data.id,
+      userId: data.user_id,
+      brand: data.brand ?? '',
+      name: data.name ?? '',
+      category: (data.category ?? 'other') as ItemCategory,
+      size: data.size ?? '',
+      color: data.color ?? '',
+      purchasePrice: data.purchase_price ?? undefined,
+      wearCount: 0,
+      isListed: false,
+      imageUrl: data.image_url ?? '',
+      createdAt: data.created_at,
+    };
+
+    setItems((prev) => [newItem, ...prev]);
+    setForm(emptyForm());
+    setShowModal(false);
+    setSaving(false);
+    router.refresh();
+  };
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between pt-1">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Closet</h1>
-        <button className="flex items-center gap-1 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white">
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-1 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white"
+        >
           <Plus size={12} strokeWidth={2.5} />
           追加
         </button>
@@ -91,6 +187,81 @@ export function ClosetClient({ items }: Props) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center">
+          <div className="w-full max-w-md rounded-t-2xl bg-white p-6 space-y-4 sm:rounded-2xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-zinc-900">アイテムを追加</h2>
+              <button onClick={() => { setShowModal(false); setError(null); setForm(emptyForm()); }}>
+                <X size={20} className="text-zinc-400" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                value={form.brand}
+                onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
+                placeholder="ブランド *"
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="アイテム名 *"
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              />
+            </div>
+
+            <div className="relative">
+              <select
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as ItemCategory }))}
+                className="w-full appearance-none rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                value={form.size}
+                onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))}
+                placeholder="サイズ"
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              />
+              <input
+                value={form.color}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                placeholder="カラー"
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              />
+            </div>
+
+            <input
+              type="number"
+              value={form.purchasePrice}
+              onChange={(e) => setForm((f) => ({ ...f, purchasePrice: e.target.value }))}
+              placeholder="購入価格（円）"
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+            />
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <button
+              onClick={handleAdd}
+              disabled={saving}
+              className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {saving ? '追加中...' : '追加する'}
+            </button>
+          </div>
         </div>
       )}
     </div>

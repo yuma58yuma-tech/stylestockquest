@@ -38,7 +38,7 @@ interface Props {
 
 export default async function MarketplaceDetailPage({ params }: Props) {
   const { id } = await params;
-  const listing = getMarketplaceListingById(id);
+  const listing = await getMarketplaceListingById(id);
   if (!listing) notFound();
 
   const { seller, item } = listing;

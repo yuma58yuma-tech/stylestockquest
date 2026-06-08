@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { House, Shirt, Plus, ShoppingBag, User, Trophy, Swords } from 'lucide-react';
+import { AuthNav } from './AuthNav';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -53,8 +54,13 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Auth */}
+      <div className="px-3 pt-2">
+        <AuthNav />
+      </div>
+
       {/* Post button */}
-      <div className="px-3 pb-6 pt-4">
+      <div className="px-3 pb-6 pt-2">
         <Link
           href="/post"
           className="flex w-full items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-85"
